@@ -1,0 +1,63 @@
+<launch>
+    <arg name="config_path" default = "$(find feature_tracker)/../config/auv/auv_right_ahrs_config_kalibr_imu10_shift.yaml" />
+	  <arg name="vins_path" default = "$(find feature_tracker)/../config/../" />
+    
+    <node name="feature_tracker" pkg="feature_tracker" type="feature_tracker" output="log">
+        <param name="config_file" type="string" value="$(arg config_path)" />
+        <param name="vins_folder" type="string" value="$(arg vins_path)" />
+    </node>
+
+    <node name="vins_estimator" pkg="vins_estimator" type="vins_estimator" output="screen">
+       <param name="config_file" type="string" value="$(arg config_path)" />
+       <param name="vins_folder" type="string" value="$(arg vins_path)" />
+    </node>
+
+    <node name="pose_graph" pkg="pose_graph" type="pose_graph" output="screen">
+        <param name="config_file" type="string" value="$(arg config_path)" />
+        <param name="visualization_shift_x" type="int" value="0" />
+        <param name="visualization_shift_y" type="int" value="0" />
+        <param name="skip_cnt" type="int" value="0" />
+        <param name="skip_dis" type="double" value="0" />
+    </node>
+
+    <node name="bag_play" pkg="rosbag" type="play" args=" --clock 
+    /home/ubuntu/Downloads/scene_2023-11-02-02-57-55-time-7100-10250-modified-ins-odom-correct-ins-time-correct-right-time-balance-left-right-clahe-left-right-modify-angle0-copy-left0.5-right0.5-restore-mag.bag     -r 1">
+    </node>
+    <!-- /media/ubuntu/ZBB-Data3/Data/MVINS/scene_2023-10-30-12-05-20-time-16000-17650-modified-ins-odom-balance-left-right-clahe-left-right-correct-ins-time-correct-right-time-modify-ahrs-angle0-scale0.5-left-right-restore-mag.bag -->
+    <node name="rqt_topic" pkg="rqt_topic" type="rqt_topic">
+    </node>
+    <!-- /media/ubuntu/ZBB-Data3/Data/MVINS/scene_2023-10-30-12-05-20-time-16000-17650-modified-ins-odom-balance-left-right-clahe-left-right-correct-ins-time-correct-right-time-modify-ahrs-angle0-scale0.5-left-right-restore-mag.bag -->
+    <node pkg ="image_transport" type = "republish" name ="republish" args="compressed in:=/web_cameras/right/image_raw  raw  out:=/web_cameras/right/image_raw">
+    </node>
+
+    <!-- auv_enhance1030 -->
+    <node pkg="rosbag" type="record" name="recording"
+      args=" -o $(find feature_tracker)/../../../../auv_enhance1102
+      /pose_graph/pose_graph_path
+      /pose_graph/pose_graph
+      /pose_graph/pose_graph_odom
+      /vins_estimator/odometry
+      /vins_estimator/extrinsic
+      /vins_estimator/relo_relative_pose
+      /vins_estimator/debug_relo_relative_pose
+      /vins_estimator/window_start
+      /vins_estimator/relocalization_path_odometry_debug
+      /vins_estimator/vio_state
+      /vins_estimator/y_diff
+      /feature_tracker/feature_state
+      /Sensor/MagOrient
+      /Sensor/AHRS
+      /imu/mag
+      /Sensor/MagOrientFilteredVec
+      /Sensor/MagOrientFiltered
+      /Sensor/AlterMag
+      /gps_publisher/gps
+      /pose_graph/keyframe_state
+      /pose_graph/detect_loop
+      /pose_graph/mag_landmark
+      /Locater/Odom
+      rosout">
+    </node>
+
+
+</launch>

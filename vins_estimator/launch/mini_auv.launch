@@ -1,0 +1,62 @@
+<launch>
+    <arg name="config_path" default = "$(find feature_tracker)/../config/mini_auv/mini_auv_config_matlab_ip12_imu10_shift.yaml" />
+	  <arg name="vins_path" default = "$(find feature_tracker)/../config/../" />
+      <param name="use_sim_time" value="true" />
+
+    <node name="feature_tracker" pkg="feature_tracker" type="feature_tracker" output="log">
+        <param name="config_file" type="string" value="$(arg config_path)" />
+        <param name="vins_folder" type="string" value="$(arg vins_path)" />
+    </node>
+
+    <node name="vins_estimator" pkg="vins_estimator" type="vins_estimator" output="screen">
+       <param name="config_file" type="string" value="$(arg config_path)" />
+       <param name="vins_folder" type="string" value="$(arg vins_path)" />
+    </node>
+
+    <node name="pose_graph" pkg="pose_graph" type="pose_graph" output="screen">
+        <param name="config_file" type="string" value="$(arg config_path)" />
+        <param name="visualization_shift_x" type="int" value="0" />
+        <param name="visualization_shift_y" type="int" value="0" />
+        <param name="skip_cnt" type="int" value="0" />
+        <param name="skip_dis" type="double" value="0" />
+    </node>
+
+    <node name="bag_play" pkg="rosbag" type="play" args=" --clock   /media/ubuntu/ZBB-Data3/Data/MVINS/land_2023-11-07-04-07-00-test-2400-5250-6circle-easy-copy-balance-front-clahe-front-0-2580.bag -r 1">
+    </node>
+
+    <node name="rqt_topic" pkg="rqt_topic" type="rqt_topic">
+    </node>
+
+    <node pkg ="image_transport" type = "republish" name ="republish" args="compressed in:=/web_cameras/front/image_raw  raw  out:=/web_cameras/front/image_raw">
+    </node>
+
+
+    <node pkg="rosbag" type="record" name="recording"
+      args=" -o /home/ubuntu/mini_auv_benchmark-6circle
+      /pose_graph/pose_graph_path
+      /pose_graph/pose_graph
+      /pose_graph/pose_graph_odom
+      /vins_estimator/odometry
+      /vins_estimator/extrinsic
+      /vins_estimator/relo_relative_pose
+      /vins_estimator/debug_relo_relative_pose
+      /vins_estimator/window_start
+      /vins_estimator/relocalization_path_odometry_debug
+      /vins_estimator/vio_state
+      /vins_estimator/y_diff
+      /feature_tracker/feature_state
+      /Sensor/MagOrient
+      /Sensor/AHRS
+      /imu/mag
+      /Sensor/MagOrientFilteredVec
+      /Sensor/MagOrientFiltered
+      /Sensor/AlterMag
+      /gps_publisher/gps
+      /pose_graph/keyframe_state
+      /pose_graph/detect_loop
+      /pose_graph/mag_landmark
+      rosout">
+    </node>
+
+
+</launch>
