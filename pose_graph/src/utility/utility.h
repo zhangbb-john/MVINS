@@ -4,11 +4,13 @@
 #include <libgen.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <iostream>
+#include <sstream>
 #include <cmath>
 #include <cassert>
 #include <cstring>
 #include <eigen3/Eigen/Dense>
-
+#include <iomanip>
 class Utility
 {
   public:
@@ -141,6 +143,13 @@ class Utility
         return angle_degrees +
             two_pi * std::floor((-angle_degrees + T(180)) / two_pi);
     };
+
+    static std::string toStringWithTwoDecimals(double num, int bit_num) {
+        std::stringstream stream;
+        stream << std::fixed << std::setprecision(bit_num) << num;
+        std::cout << "loop score " << stream.str() << std::endl;
+        return stream.str();
+    }
 };
 
 class FileSystemHelper

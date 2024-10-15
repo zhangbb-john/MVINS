@@ -2,15 +2,27 @@
 #include <vector>
 #include <ros/ros.h>
 #include <nav_msgs/Odometry.h>
+#include <nav_msgs/Path.h>
+#include <geometry_msgs/PoseStamped.h>
+
 #include <auv_nav_msg/Gnss.h>
 #include <utility/utility.h>
 ros::Publisher pub_gps_odom;
 Eigen::Vector3d position(-100, -100, 0);
 Eigen::Vector3d gps_origin(0, 0, 0);
 bool flag_init = false;
-void odomCallback(const nav_msgs::OdometryConstPtr &odom_msg)
+// void path_callback(const nav_msgs::Path& path)
+
+void path_callback(const nav_msgs::Path& path)
 {
-    position << odom_msg->pose.pose.position.x, odom_msg->pose.pose.position.y, odom_msg->pose.pose.position.z;
+    geometry_msgs::PoseStamped recent_pose = path.poses.back();
+
+    // Extract position
+    double x = recent_pose.pose.position.x;
+    double y = recent_pose.pose.position.y;
+    double z = recent_pose.pose.position.z;
+    position << x, y, z; 
+    return;
 }
 void gpsCallback(const auv_nav_msg::Gnss msg)
 {
@@ -45,8 +57,11 @@ int main(int argc, char **argv)
 {
     ros::init(argc, argv, "gps_publisher");
     ros::NodeHandle n("~");
-    ros::Subscriber sub_odom = n.subscribe<nav_msgs::Odometry>("/vins_estimator/odometry", 1000, odomCallback);
+    // ros::Subscriber sub_odom = n.subscribe<nav_msgs::Path>("/pose_graph/pose_graph_path", 1000, odomCallback);
     ros::Subscriber sub_gps = n.subscribe<auv_nav_msg::Gnss>("/Sensor/Gps", 1000, gpsCallback);
+
+    ros::Subscriber sub_path = n.subscribe("/pose_graph/pose_graph_path", 1000, path_callback);
+
     pub_gps_odom = n.advertise<nav_msgs::Odometry>("gps", 1000);
     ros::spin();
 }

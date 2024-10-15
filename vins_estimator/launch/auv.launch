@@ -1,5 +1,5 @@
 <launch>
-    <arg name="config_path" default = "$(find feature_tracker)/../config/auv/auv_config_matlab_ip12_imu10_shift.yaml" />
+    <arg name="config_path" default = "$(find feature_tracker)/../config/auv/auv_right_ahrs_config_kalibr_imu10_shift_704_resol.yaml" />
 	  <arg name="vins_path" default = "$(find feature_tracker)/../config/../" />
     
     <node name="feature_tracker" pkg="feature_tracker" type="feature_tracker" output="log">

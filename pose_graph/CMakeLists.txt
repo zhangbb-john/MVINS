@@ -12,6 +12,7 @@ find_package(catkin REQUIRED COMPONENTS
     nav_msgs
     camera_model
     cv_bridge
+    image_transport
     roslib
     auv_nav_msg
     )

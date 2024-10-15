@@ -205,6 +205,12 @@ void relocalization_callback(const sensor_msgs::PointCloudConstPtr &points_msg)
     m_buf.unlock();
 }
 
+void altCallback(const auv_nav_msg::AltimeterConstPtr &msg)
+{
+    estimator.altitude = 19.5 - msg->depth;
+}
+
+
 // thread: visual-inertial odometry
 void process()
 {
@@ -357,6 +363,8 @@ int main(int argc, char **argv)
     ros::Subscriber sub_restart = n.subscribe("/feature_tracker/restart", 2000, restart_callback);
     ros::Subscriber sub_relo_points = n.subscribe("/pose_graph/match_points", 2000, relocalization_callback);
 
+    ros::Subscriber sub_altimeter = n.subscribe("/Sensor/Altimeter", 2000, altCallback);
+    
     std::thread measurement_process{process};
     ros::spin();
 

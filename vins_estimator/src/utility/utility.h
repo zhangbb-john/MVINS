@@ -8,7 +8,7 @@
 #include <cassert>
 #include <cstring>
 #include <eigen3/Eigen/Dense>
-
+#include <auv_nav_msg/Altimeter.h>
 class Utility
 {
   public:

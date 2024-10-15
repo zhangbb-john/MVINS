@@ -33,6 +33,11 @@ void PoseGraph::registerPub(ros::NodeHandle &n)
     pub_pose_graph_odom = n.advertise<nav_msgs::Odometry>("pose_graph_odom", 1000);
     pub_keyframe_state = n.advertise<auv_nav_msg::KeyframeState>("keyframe_state", 1000);
     pub_detect_loop = n.advertise<auv_nav_msg::DetectLoop>("detect_loop", 1000);
+    // ImageTransport handles the communication for image messages
+    image_transport::ImageTransport it(n);
+
+    // Publisher to publish images
+    pub_loop_ret = it.advertise("loop_resut", 1000);
 
     for (int i = 1; i < 10; i++)
         pub_path[i] = n.advertise<nav_msgs::Path>("path_" + to_string(i), 1000);
@@ -95,7 +100,7 @@ void PoseGraph::addKeyFrame(KeyFrame* cur_kf, bool flag_detect_loop)
         frame_info.connect_time[i] = 0;
         detect_loop_msg.img_flag_connect[i] = (0);
     }    
-    if (flag_detect_loop && (global_index % 1) == 0)
+    if (flag_detect_loop && (global_index % 4) < 0)
     {
         TicToc tmp_t;
         loop_index = detectLoop(cur_kf, cur_kf->index, detect_loop_msg);
@@ -409,7 +414,7 @@ int PoseGraph::detectLoop(KeyFrame* keyframe, int frame_index, auv_nav_msg::Dete
     {
         int feature_num = keyframe->keypoints.size();
         cv::resize(keyframe->image, compressed_image, cv::Size(376, 240));
-        putText(compressed_image, "feature_num:" + to_string(feature_num), cv::Point2f(10, 10), CV_FONT_HERSHEY_SIMPLEX, 0.4, cv::Scalar(255));
+        putText(compressed_image, "feature_num:" + to_string(feature_num), cv::Point2f(10, 30), CV_FONT_HERSHEY_SIMPLEX, 0.6, cv::Scalar(0));
         image_pool[frame_index] = compressed_image;
     }
     TicToc tmp_t;
@@ -427,25 +432,62 @@ int PoseGraph::detectLoop(KeyFrame* keyframe, int frame_index, auv_nav_msg::Dete
     // ret[0] is the nearest neighbour's score. threshold change with neighour score
     bool find_loop = false;
     TicToc t_debug;
-    cv::Mat loop_result;
+    int row_num = ceil(sqrt(2.4 * FRAME_NUM));
+    int col_num = ceil(row_num / 2.4);
+    row_num++;
+    std::cout << "row_num is " << row_num << "; col_num is " << col_num << "; ret.size is " << ret.size() << std::endl;
+    cv::Mat loop_result = cv::Mat::zeros(compressed_image.rows * row_num, compressed_image.cols * col_num, compressed_image.type());
     if (DEBUG_IMAGE)
     {
-        loop_result = compressed_image.clone();
+        compressed_image.copyTo(loop_result(cv::Rect(0, 0, compressed_image.cols, compressed_image.rows)));             // Top-left
         if (ret.size() > 0)
-            putText(loop_result, "neighbour score:" + to_string(ret[0].Score), cv::Point2f(10, 50), CV_FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(255));
-    }
-    // visual loop result 
-    if (DEBUG_IMAGE)
-    {
+        {
+            putText(loop_result, "neighbour score:" + to_string(ret[0].Score), cv::Point2f(10, 50), CV_FONT_HERSHEY_SIMPLEX, 0.6, cv::Scalar(0));
+        }
+
+        int cur_x = compressed_image.cols, cur_y = 0;
         for (unsigned int i = 0; i < ret.size(); i++)
         {
             int tmp_index = ret[i].Id;
             auto it = image_pool.find(tmp_index);
             cv::Mat tmp_image = (it->second).clone();
-            putText(tmp_image, "index:  " + to_string(tmp_index) + "loop score:" + to_string(ret[i].Score), cv::Point2f(10, 50), CV_FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(255));
-            cv::hconcat(loop_result, tmp_image, loop_result);
+            putText(tmp_image, "index:  " + to_string(tmp_index) + "loop score:" + Utility::toStringWithTwoDecimals(ret[i].Score, 3), cv::Point2f(10, 50), CV_FONT_HERSHEY_SIMPLEX, 0.6, cv::Scalar(0));
+            if (cur_x + compressed_image.cols <= loop_result.cols)
+            {
+                std::cout << "cur_x is " << cur_x << "; cur_y is " << cur_y << std::endl;
+                tmp_image.copyTo(loop_result(cv::Rect(cur_x, cur_y, compressed_image.cols, compressed_image.rows)));             // Top-left       
+            }
+            else 
+            {
+                cur_x = 0;
+                cur_y = cur_y + compressed_image.rows;
+                std::cout << "cur_x is " << cur_x << "; cur_y is " << cur_y << std::endl;
+                tmp_image.copyTo(loop_result(cv::Rect(cur_x, cur_y, compressed_image.cols, compressed_image.rows)));             // Top-left
+            }
+            cur_x = cur_x + compressed_image.cols;
+            // cv::hconcat(loop_result, tmp_image, loop_result);
         }
     }
+
+    // Display the result    
+    // if (DEBUG_IMAGE)
+    // {
+    //     loop_result = compressed_image.clone();
+    //     if (ret.size() > 0)
+    //         putText(loop_result, "neighbour score:" + to_string(ret[0].Score), cv::Point2f(10, 50), CV_FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(255));
+    // }
+    // // visual loop result 
+    // if (DEBUG_IMAGE)
+    // {
+    //     for (unsigned int i = 0; i < ret.size(); i++)
+    //     {
+    //         int tmp_index = ret[i].Id;
+    //         auto it = image_pool.find(tmp_index);
+    //         cv::Mat tmp_image = (it->second).clone();
+    //         putText(tmp_image, "index:  " + to_string(tmp_index) + "loop score:" + to_string(ret[i].Score), cv::Point2f(10, 50), CV_FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(255));
+    //         cv::hconcat(loop_result, tmp_image, loop_result);
+    //     }
+    // }
     if (ret.size() > 1)
     {
         int length = ret.size();
@@ -469,19 +511,22 @@ int PoseGraph::detectLoop(KeyFrame* keyframe, int frame_index, auv_nav_msg::Dete
                 {
                     auto it = image_pool.find(tmp_index);
                     cv::Mat tmp_image = (it->second).clone();
-                    putText(tmp_image, "loop score:" + to_string(ret[i].Score), cv::Point2f(10, 50), CV_FONT_HERSHEY_SIMPLEX, 0.4, cv::Scalar(255));
+                    putText(tmp_image, "loop score:" + Utility::toStringWithTwoDecimals(ret[i].Score, 3), cv::Point2f(10, 50), CV_FONT_HERSHEY_SIMPLEX, 0.6, cv::Scalar(0));
                     cv::hconcat(loop_result, tmp_image, loop_result);
                 }
             }
 
         }
-/*
     if (DEBUG_IMAGE)
     {
-        cv::imshow("loop_result", loop_result);
-        cv::waitKey(20);
+        cv::Size newSize(loop_result.cols / 2, loop_result.rows / 2);  // New widh and height
+        cv::resize(loop_result, loop_result, newSize);
+        sensor_msgs::ImagePtr loop_img_msg = cv_bridge::CvImage(std_msgs::Header(), "mono8", loop_result).toImageMsg();
+        pub_loop_ret.publish(loop_img_msg);      
+        // cv::imshow("loop_result", loop_result);
+        // cv::waitKey(20);
     }
-*/
+
     frame_info.debug_img_time = t_debug.toc() / 1000;
     if (find_loop && frame_index > 50)
     {
@@ -506,7 +551,7 @@ void PoseGraph::addKeyFrameIntoVoc(KeyFrame* keyframe)
     {
         int feature_num = keyframe->keypoints.size();
         cv::resize(keyframe->image, compressed_image, cv::Size(376, 240));
-        putText(compressed_image, "feature_num:" + to_string(feature_num), cv::Point2f(10, 10), CV_FONT_HERSHEY_SIMPLEX, 0.4, cv::Scalar(255));
+        putText(compressed_image, "feature_num:" + to_string(feature_num), cv::Point2f(10, 25), CV_FONT_HERSHEY_SIMPLEX, 0.6, cv::Scalar(0));
         image_pool[keyframe->index] = compressed_image;
     }
 

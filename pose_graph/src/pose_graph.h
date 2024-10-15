@@ -14,6 +14,7 @@
 #include <nav_msgs/Odometry.h>
 #include <stdio.h>
 #include <ros/ros.h>
+#include <image_transport/image_transport.h>
 #include "keyframe.h"
 #include "utility/tic_toc.h"
 #include "utility/utility.h"
@@ -28,11 +29,12 @@
 #include <auv_nav_msg/KeyframeState.h>
 #include <auv_nav_msg/DetectLoop.h>
 #include <auv_nav_msg/MagLandmark.h>
+#include <sensor_msgs/Image.h>
 #define SHOW_S_EDGE false
 #define SHOW_L_EDGE true
 #define SAVE_LOOP_PATH true
-#define FRAME_NUM 10//10////tank1 10//field 25 //tank2 4
-#define THRE_IMG  0.012//tank2 0.012//0.03//tank1 0.016//field0.032//tank2 0.011
+#define FRAME_NUM 15//10////tank1 10//field 25 //tank2 15
+#define THRE_IMG  0.016//mvis 0.008//tank2 0.012//0.03//tank1 0.016//field0.032//tank2 0.011
 using namespace DVision;
 using namespace DBoW2;
 struct FrameInfo
@@ -110,6 +112,7 @@ private:
 	ros::Publisher pub_path[10];
 	ros::Publisher pub_pose_graph_odom;
 	ros::Publisher pub_keyframe_state, pub_detect_loop;
+	image_transport::Publisher  pub_loop_ret;
 
 };
 

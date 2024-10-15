@@ -783,7 +783,7 @@ void Estimator::optimization()
         
         Vector3d pts_i = it_per_id.feature_per_frame[0].point;
         #ifdef AUV
-        para_Feature[feature_index][0] = 1.0 / 2.25;//2.15
+        para_Feature[feature_index][0] = 1.0 / 2.15;//1.0 / altitude;//2.25;//2.15
         problem.AddParameterBlock(para_Feature[feature_index], 1);
 
         problem.SetParameterBlockConstant(para_Feature[feature_index]);

@@ -42,7 +42,13 @@
   <buildtool_depend>catkin</buildtool_depend>
   <build_depend>camera_model</build_depend>
   <build_depend>auv_nav_msg</build_depend>
+  <build_depend>image_transport</build_depend>
+  <build_depend>cv_bridge</build_depend>
+  <build_depend>image_transport</build_depend>
+  <build_depend>sensor_msgs</build_depend>
 
+  <run_depend>cv_bridge</run_depend>
+  <run_depend>image_transport</run_depend>
   <run_depend>camera_model</run_depend>
 
 
