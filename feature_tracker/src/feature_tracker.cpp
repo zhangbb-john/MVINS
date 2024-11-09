@@ -120,7 +120,7 @@ void FeatureTracker::readImage(const cv::Mat &_img, double _cur_time)
             cv::Mat grad_x, grad_y;
             cv::Sobel(cur_img, grad_x, CV_64F, 1, 0, 3);
             cv::Sobel(cur_img, grad_y, CV_64F, 0, 1, 3);
-            double threshold = 15;//AUV mode 50 mauv5
+            double threshold = 5;//AUV mode 50 mauv5
             for(size_t i = 0; i < status.size() ; i++) 
             {
                 if (status[i])

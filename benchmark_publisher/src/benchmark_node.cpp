@@ -14,7 +14,7 @@
 using namespace std;
 using namespace Eigen;
 using namespace ceres;
-const int SKIP = 300;
+const int SKIP = 20;
 Eigen::Vector3d gt_position(-100, -100, -100), est_position(-100, -100, -100);
 Eigen::Quaterniond gt_q(1, 0, 0, 0);
 Eigen::Quaterniond est_q(1, 0, 0, 0);
@@ -96,7 +96,7 @@ void gt_callback(const nav_msgs::Odometry odom)
                 0, 0, -1;
     Eigen::Matrix3d enu2ahrs = enu2ned * ned2body * body2ahrs; // bodyframe2ahrs frame ()
     // std::cout << "enu2ahrs is " << std::endl << enu2ahrs << std::endl;
-    gt_q = Eigen::Quaterniond(enu2ahrs);
+    gt_q = Eigen::Quaterniond(ned2body);//this is actually enu2body 
 
     std::cout << "flag align is " << flag_align << std::endl;
     if (!flag_align)
@@ -345,7 +345,8 @@ void path_callback(const nav_msgs::Path& path)
         }
     }
     std::cout << "smooth_path.poses.size() is " << smooth_path.poses.size() << std::endl;
-    pub_sm_path.publish(smooth_path);
+    if (flag_align)
+        pub_sm_path.publish(smooth_path);
     
     return;
 }
@@ -369,7 +370,7 @@ int main(int argc, char **argv)
     pub_gt_path = n.advertise<nav_msgs::Path>("gt_path", 1000);
     pub_sm_path = n.advertise<nav_msgs::Path>("estimated_path", 1000);
 
-    ros::Subscriber sub_odom = n.subscribe("/Locater/Odom", 1000, gt_callback);
+    ros::Subscriber sub_odom = n.subscribe("/Locater/OdomAHRS", 1000, gt_callback);
     ros::Subscriber sub_path = n.subscribe("/pose_graph/pose_graph_path", 1000, path_callback);
     ros::Subscriber sub_detect_loop = n.subscribe("/pose_graph/detect_loop", 1000, loop_callback);
     ros::Rate r(20);

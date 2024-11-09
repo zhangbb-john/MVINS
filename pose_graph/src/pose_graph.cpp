@@ -100,7 +100,7 @@ void PoseGraph::addKeyFrame(KeyFrame* cur_kf, bool flag_detect_loop)
         frame_info.connect_time[i] = 0;
         detect_loop_msg.img_flag_connect[i] = (0);
     }    
-    if (flag_detect_loop && (global_index % 4) < 0)
+    if (flag_detect_loop && (global_index % 4) >= 0)
     {
         TicToc tmp_t;
         loop_index = detectLoop(cur_kf, cur_kf->index, detect_loop_msg);

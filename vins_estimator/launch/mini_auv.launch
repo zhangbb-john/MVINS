@@ -21,7 +21,7 @@
         <param name="skip_dis" type="double" value="0" />
     </node>
 
-    <node name="bag_play" pkg="rosbag" type="play" args=" --clock   /media/ubuntu/ZBB-Data3/Data/MVINS/land_2023-11-07-04-07-00-test-2400-5250-6circle-easy-copy-balance-front-clahe-front-0-2580.bag -r 1">
+    <node name="bag_play" pkg="rosbag" type="play" args=" --clock   /media/ubuntu/Bingbing-Data2/MVINS-Data/202309-28-202311-30-ip12-cam/20231103-20231108-idsse-sea-trial/land_2023-11-07-04-07-00-test/land_2023-11-07-04-07-00-test-2400-5250-6circle-easy-copy-balance-front-clahe-front-0-2580-modified-web_camerasfront_originalimage_rawcompressed-AddOdomAHRS.bag -r 1">
     </node>
 
     <node name="rqt_topic" pkg="rqt_topic" type="rqt_topic">
@@ -32,7 +32,7 @@
 
 
     <node pkg="rosbag" type="record" name="recording"
-      args=" -o /home/ubuntu/mini_auv_benchmark-6circle
+      args=" -o /workspace/data/Result/mini_auv_benchmark-vislam-6circle
       /pose_graph/pose_graph_path
       /pose_graph/pose_graph
       /pose_graph/pose_graph_odom
@@ -55,6 +55,7 @@
       /pose_graph/keyframe_state
       /pose_graph/detect_loop
       /pose_graph/mag_landmark
+      /Locater/OdomAHRS
       rosout">
     </node>
 
